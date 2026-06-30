@@ -3,57 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛍️ Shopee Afiliado</title>
+    <title>Achadinhos Shopee</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; }
+        
+        /* HEADER */
         .header { background: linear-gradient(135deg, #ee4d2d, #ff6f3d); padding: 20px; color: white; text-align: center; }
-        .header h1 { font-size: 2rem; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; }
         .header h1 span { color: #ffe066; }
+        .header p { opacity: 0.9; margin-top: 5px; font-size: 0.95rem; }
+        
+        /* SEARCH */
         .search { max-width: 500px; margin: 20px auto; display: flex; padding: 0 20px; }
-        .search input { flex:1; padding:12px; border:2px solid #ddd; border-radius:8px 0 0 8px; font-size:1rem; }
-        .search button { padding:12px 24px; background:#ee4d2d; color:white; border:none; border-radius:0 8px 8px 0; cursor:pointer; }
-        .search button:hover { background:#d43c1e; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .categorias { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; flex-wrap: wrap; }
-        .cat-btn { padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px; background: white; cursor: pointer; white-space: nowrap; transition:0.3s; }
-        .cat-btn:hover { border-color: #ee4d2d; }
+        .search input { flex:1; padding: 14px 20px; border: 2px solid #ddd; border-radius: 10px 0 0 10px; font-size: 1rem; outline: none; }
+        .search input:focus { border-color: #ee4d2d; }
+        .search button { padding: 14px 28px; background: #ee4d2d; color: white; border: none; border-radius: 0 10px 10px 0; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .search button:hover { background: #d43c1e; }
+        
+        /* DESCONTO DO DIA */
+        .promo-section { background: linear-gradient(135deg, #ff6b35, #ff3c00); margin: 0 20px 30px; border-radius: 15px; padding: 25px; color: white; }
+        .promo-section h2 { font-size: 1.8rem; display: flex; align-items: center; gap: 10px; }
+        .promo-section h2 i { color: #ffe066; }
+        .promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .promo-card { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 15px; text-align: center; backdrop-filter: blur(10px); transition: 0.3s; cursor: pointer; }
+        .promo-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.25); }
+        .promo-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+        .promo-card .desconto-badge { background: #ffe066; color: #333; padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-block; margin-top: 8px; }
+        .promo-card .preco { font-size: 1.1rem; font-weight: 700; margin-top: 5px; }
+        
+        /* CATEGORIAS */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 30px; }
+        .categorias { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0 20px; flex-wrap: wrap; }
+        .cat-btn { padding: 10px 24px; border: 2px solid #ddd; border-radius: 25px; background: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.3s; white-space: nowrap; }
+        .cat-btn:hover { border-color: #ee4d2d; transform: scale(1.05); }
         .cat-btn.active { background: #ee4d2d; color: white; border-color: #ee4d2d; }
+        
+        /* INFO BAR */
+        .info-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: #666; font-size: 0.9rem; flex-wrap: wrap; gap: 10px; }
+        .info-bar .count { font-weight: 600; color: #ee4d2d; }
+        
+        /* PRODUTOS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition:0.3s; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
         .card img { width: 100%; height: 200px; object-fit: cover; background: #f8f8f8; }
         .card .info { padding: 15px; }
-        .card .nome { font-weight: 600; margin-bottom: 8px; height: 40px; overflow: hidden; font-size: 0.95rem; }
-        .card .preco { color: #ee4d2d; font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; }
-        .btn-buy { background: #ee4d2d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 600; transition:0.3s; }
+        .card .nome { font-weight: 600; margin-bottom: 8px; height: 42px; overflow: hidden; font-size: 0.95rem; }
+        .card .preco { color: #ee4d2d; font-size: 1.3rem; font-weight: 700; }
+        .card .preco-antigo { color: #999; font-size: 0.85rem; text-decoration: line-through; margin-left: 8px; }
+        .card .rating { color: #f5a623; font-size: 0.9rem; margin: 5px 0; }
+        .card .comissao { color: #666; font-size: 0.8rem; margin: 5px 0; }
+        .btn-buy { background: #ee4d2d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-buy:hover { background: #d43c1e; transform: scale(1.02); }
-        .loading { text-align: center; padding: 40px; color: #666; grid-column: 1 / -1; }
-        .loading i { font-size: 2rem; color: #ee4d2d; animation: spin 1s linear infinite; }
+        
+        /* LOADING / EMPTY */
+        .loading { text-align: center; padding: 60px; color: #666; grid-column: 1 / -1; }
+        .loading i { font-size: 2.5rem; color: #ee4d2d; animation: spin 1s linear infinite; display: block; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .no-results { text-align: center; padding: 60px 20px; grid-column: 1 / -1; color: #999; }
+        .no-results { text-align: center; padding: 60px 20px; color: #999; grid-column: 1 / -1; }
         .no-results i { font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block; }
-        .info-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: #666; font-size: 0.9rem; flex-wrap: wrap; gap: 10px; }
+        
+        /* FOOTER */
+        .footer { text-align: center; padding: 20px; color: #999; font-size: 0.8rem; border-top: 1px solid #eee; margin-top: 30px; }
+        
         @media (max-width: 768px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .card img { height: 150px; }
-            .header h1 { font-size: 1.5rem; }
+            .header h1 { font-size: 1.6rem; }
+            .promo-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
     </style>
 </head>
 <body>
+
+    <!-- HEADER -->
     <div class="header">
-        <h1>🛍️ Shopee<span>Afiliado</span></h1>
-        <p>Ofertas com link de afiliado - Compre com segurança</p>
+        <h1>🛍️ Achadinhos <span>Shopee</span></h1>
+        <p>Os melhores produtos com link de afiliado</p>
     </div>
-    
+
+    <!-- SEARCH -->
     <div class="search">
         <input id="searchInput" placeholder="🔍 Buscar produtos..." onkeyup="buscar(event)">
         <button onclick="buscar()"><i class="fas fa-search"></i> Buscar</button>
     </div>
-    
+
     <div class="container">
+        <!-- DESCONTO DO DIA -->
+        <div class="promo-section" id="promoSection">
+            <h2><i class="fas fa-bolt"></i> 🔥 Desconto do Dia</h2>
+            <div class="promo-grid" id="promoGrid">
+                <div class="loading" style="color: white;"><i class="fas fa-spinner"></i><p>Carregando promoções...</p></div>
+            </div>
+        </div>
+
+        <!-- CATEGORIAS -->
         <div class="categorias" id="categorias">
             <button class="cat-btn active" onclick="loadProducts('todos', this)">🛍️ Todos</button>
             <button class="cat-btn" onclick="loadProducts('moda', this)">👗 Moda</button>
@@ -63,31 +109,60 @@
             <button class="cat-btn" onclick="loadProducts('beleza', this)">💄 Beleza</button>
             <button class="cat-btn" onclick="loadProducts('casa', this)">🏠 Casa</button>
         </div>
-        
+
+        <!-- INFO -->
         <div class="info-bar">
-            <span id="count">Carregando produtos...</span>
+            <span><i class="fas fa-box"></i> <span id="count" class="count">Carregando...</span></span>
             <span>🔄 Atualizado: <span id="time">Agora</span></span>
         </div>
-        
+
+        <!-- PRODUTOS -->
         <div class="grid" id="produtos">
             <div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>
         </div>
     </div>
 
+    <div class="footer">
+        <p>🛍️ Achadinhos Shopee - Todos os produtos com link de afiliado</p>
+    </div>
+
     <script>
         let todosProdutos = [];
         let categoriaAtual = 'todos';
-        
+
+        // ===== CARREGAR PROMOÇÕES =====
+        function loadPromocoes() {
+            fetch('/api/promocoes')
+                .then(r => r.json())
+                .then(data => {
+                    const grid = document.getElementById('promoGrid');
+                    if (!data || data.length === 0) {
+                        grid.innerHTML = '<p style="color:white;text-align:center;">Nenhuma promoção no momento</p>';
+                        return;
+                    }
+                    grid.innerHTML = data.slice(0, 10).map(p => `
+                        <div class="promo-card" onclick="window.open('${p.link_afiliado || '#'}', '_blank')">
+                            <img src="${p.img || 'https://via.placeholder.com/200x120/ff6b35/ffffff?text=Promo'}" 
+                                 onerror="this.src='https://via.placeholder.com/200x120/ff6b35/ffffff?text=Promo'">
+                            <div style="font-size:0.85rem;margin-top:8px;">${p.nome.substring(0, 40)}${p.nome.length > 40 ? '...' : ''}</div>
+                            <div class="preco">${p.preco_formatado}</div>
+                            <span class="desconto-badge">🔥 ${p.desconto}% OFF</span>
+                            ${p.rating ? `<div style="font-size:0.8rem;color:#ffe066;">⭐ ${p.rating.toFixed(1)}</div>` : ''}
+                        </div>
+                    `).join('');
+                });
+        }
+
+        // ===== CARREGAR PRODUTOS =====
         function loadProducts(cat, btn) {
             categoriaAtual = cat;
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
-            
+
             const grid = document.getElementById('produtos');
             grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>';
-            
-            // ROTA CORRETA PARA O RENDER
-            fetch('/api/products')
+
+            fetch(`/api/products?categoria=${cat}`)
                 .then(r => r.json())
                 .then(data => {
                     todosProdutos = data;
@@ -96,28 +171,40 @@
                     renderizar(data);
                 })
                 .catch(() => {
-                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar produtos</h3><p>Tente novamente mais tarde</p></div>';
+                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar</h3><p>Tente novamente</p></div>';
                 });
         }
-        
+
+        // ===== RENDERIZAR =====
         function renderizar(produtos) {
             const grid = document.getElementById('produtos');
             if (!produtos || produtos.length === 0) {
-                grid.innerHTML = '<div class="no-results"><i class="fas fa-box-open"></i><h3>Nenhum produto encontrado</h3><p>Tente buscar por outro termo</p></div>';
+                grid.innerHTML = '<div class="no-results"><i class="fas fa-box-open"></i><h3>Nenhum produto encontrado</h3><p>Tente outra categoria</p></div>';
                 return;
             }
-            
+
             grid.innerHTML = produtos.map(p => {
-                const img = p.img || 'https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Shopee';
+                const img = p.img || 'https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Achadinhos';
                 const nome = p.nome || 'Produto sem nome';
                 const link = p.link_afiliado || '#';
+                const preco = p.preco_formatado || 'R$ 0,00';
+                const rating = p.rating || 0;
+                const avaliacoes = p.avaliacoes || 0;
+                const comissao = p.comissao || 0;
+                const desconto = p.desconto || 0;
+
                 return `
                     <div class="card">
-                        <img src="${img}" alt="${nome}" onerror="this.src='https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Produto'">
+                        <img src="${img}" alt="${nome}" onerror="this.src='https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Achadinhos'">
                         <div class="info">
                             <div class="nome">${nome}</div>
-                            <div class="preco">💰 R$ 0,00</div>
-                            <button class="btn-buy" onclick="comprar('${link}')">
+                            <div class="preco">${preco}
+                                ${desconto > 0 ? `<span class="preco-antigo">R$ ${(parseFloat(preco.replace('R$ ', '').replace(',', '.')) * (1 + desconto/100)).toFixed(2).replace('.', ',')}</span>` : ''}
+                            </div>
+                            ${rating > 0 ? `<div class="rating">⭐ ${rating.toFixed(1)} ${avaliacoes > 0 ? `(${avaliacoes} avaliações)` : ''}</div>` : ''}
+                            ${comissao > 0 ? `<div class="comissao">💸 Comissão: ${comissao.toFixed(1)}%</div>` : ''}
+                            ${desconto > 0 ? `<div style="color:#ee4d2d;font-weight:700;margin-bottom:8px;">🔥 ${desconto}% OFF</div>` : ''}
+                            <button class="btn-buy" onclick="window.open('${link}', '_blank')">
                                 <i class="fas fa-shopping-cart"></i> Comprar
                             </button>
                         </div>
@@ -125,29 +212,36 @@
                 `;
             }).join('');
         }
-        
+
+        // ===== BUSCAR =====
         function buscar(event) {
             if (event && event.key !== 'Enter') return;
             const q = document.getElementById('searchInput').value.trim();
             if (!q) { loadProducts(categoriaAtual); return; }
-            
-            const filtrados = todosProdutos.filter(p => 
-                p.nome && p.nome.toLowerCase().includes(q.toLowerCase())
-            );
-            document.getElementById('count').textContent = `${filtrados.length} resultados para "${q}"`;
-            renderizar(filtrados);
+
+            fetch(`/api/search?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('count').textContent = `${data.length} resultados para "${q}"`;
+                    renderizar(data);
+                });
         }
-        
-        function comprar(link) {
-            if (link && link !== '#') {
-                window.open(link, '_blank');
-            } else {
-                alert('Link indisponível no momento');
-            }
-        }
-        
+
+        // ===== INICIAR =====
         window.onload = function() {
+            loadPromocoes();
             loadProducts('todos', document.querySelector('.cat-btn'));
+
+            // Atualizar promoções a cada 5 minutos
+            setInterval(loadPromocoes, 300000);
+            // Atualizar contagem
+            setInterval(() => {
+                fetch('/api/products?categoria=todos')
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('count').textContent = `${data.length} produtos encontrados`;
+                    });
+            }, 60000);
         };
     </script>
 </body>
