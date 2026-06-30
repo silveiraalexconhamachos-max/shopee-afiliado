@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Shopee Afiliado - Ofertas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ee4d2d, #ff6f3d);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo i { font-size: 1.8rem; }
+        .logo span { color: #ffe066; }
+        
+        .search-box {
+            flex: 1;
+            max-width: 500px;
+            min-width: 200px;
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+        }
+        .search-box button {
+            padding: 10px 20px;
+            background: #ee4d2d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .search-box button:hover { background: #d43c1e; }
+        
+        .categories {
+            background: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 70px;
+            z-index: 99;
+        }
+        .categories-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+        .category-btn {
+            padding: 8px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+        .category-btn:hover {
+            border-color: #ee4d2d;
+            color: #ee4d2d;
+        }
+        .category-btn.active {
+            background: #ee4d2d;
+            border-color: #ee4d2d;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .products-header h2 {
+            color: #333;
+            font-size: 1.3rem;
+        }
+        .products-header span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .product-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: #f8f8f8;
+        }
+        .product-info { padding: 15px; }
+        .product-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 45px;
+        }
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ee4d2d;
+            margin-bottom: 12px;
+        }
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-buy {
+            flex: 1;
+            padding: 10px;
+            background: #ee4d2d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-buy:hover {
+            background: #d43c1e;
+            transform: scale(1.02);
+        }
+        .btn-buy i { font-size: 0.9rem; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .loading i {
+            font-size: 2rem;
+            color: #ee4d2d;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+        .no-results i {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+        .no-results h3 { color: #666; margin-bottom: 10px; }
+        .no-results p { color: #999; }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box { max-width: 100%; }
+            .logo { justify-content: center; }
+            .categories-content { padding: 0 10px; }
+            .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            .product-img { height: 160px; }
+            .product-name { font-size: 0.85rem; height: 38px; }
+            .product-price { font-size: 1rem; }
+            .btn-buy { font-size: 0.8rem; padding: 8px; }
+        }
+        
+        ::-webkit-scrollbar { height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #ee4d2d; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-store"></i>
+                Shopee<span>Afiliado</span>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar produtos..." onkeyup="searchProducts(event)">
+                <button onclick="searchProducts()"><i class="fas fa-search"></i></button>
+            </div>
+            <div style="color: white; font-size: 0.85rem;">
+                <i class="fas fa-box"></i> <span id="productCount">0</span> produtos
+            </div>
+        </div>
+    </header>
+
+    <nav class="categories">
+        <div class="categories-content" id="categories">
+            <button class="category-btn active" data-cat="geral" onclick="loadProducts('geral', this)">🛍️ Todos</button>
+            <button class="category-btn" data-cat="moda" onclick="loadProducts('moda', this)">👗 Moda</button>
+            <button class="category-btn" data-cat="esporte" onclick="loadProducts('esporte', this)">⚽ Esporte</button>
+            <button class="category-btn" data-cat="informatica" onclick="loadProducts('informatica', this)">💻 Informática</button>
+            <button class="category-btn" data-cat="eletronicos" onclick="loadProducts('eletronicos', this)">📱 Eletrônicos</button>
+            <button class="category-btn" data-cat="beleza" onclick="loadProducts('beleza', this)">💄 Beleza</button>
+            <button class="category-btn" data-cat="casa" onclick="loadProducts('casa', this)">🏠 Casa</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="products-header">
+            <h2 id="categoryTitle">🛍️ Todos os Produtos</h2>
+            <span id="productCountLabel">Carregando...</span>
+        </div>
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>Carregando produtos...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = 'geral';
+        let allProducts = [];
+        
+        function loadProducts(categoria, btn) {
+            currentCategory = categoria;
+            
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            
+            const names = {
+                'geral': '🛍️ Todos os Produtos',
+                'moda': '👗 Moda',
+                'esporte': '⚽ Esporte',
+                'informatica': '💻 Informática',
+                'eletronicos': '📱 Eletrônicos',
+                'beleza': '💄 Beleza',
+                'casa': '🏠 Casa'
+            };
+            document.getElementById('categoryTitle').textContent = names[categoria] || '🛍️ Produtos';
+            
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando...</p></div>';
+            
+            const url = categoria === 'geral' ? '/.netlify/functions/api/products' : `/.netlify/functions/api/products/${categoria}`;
+            
+            fetch(url)
+                .then(r => r.json())
+                .then(products => {
+                    allProducts = products;
+                    renderProducts(products);
+                })
+                .catch(() => {
+                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar</h3><p>Tente novamente mais tarde</p></div>';
+                });
+        }
+        
+        function renderProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            const label = document.getElementById('productCountLabel');
+            
+            if (!products || products.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Nenhum produto encontrado</h3>
+                        <p>Atualize a página para buscar novos produtos</p>
+                    </div>
+                `;
+                label.textContent = '0 produtos';
+                return;
+            }
+            
+            label.textContent = `${products.length} produtos`;
+            
+            const html = products.map(p => {
+                const price = p.preco || 'R$ 0,00';
+                const nome = p.nome || 'Produto sem nome';
+                const img = p.img || 'https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Shopee';
+                const link = p.link_afiliado || '#';
+                
+                return `
+                    <div class="product-card">
+                        <img src="${img}" alt="${nome}" class="product-img" 
+                             onerror="this.src='https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Produto'">
+                        <div class="product-info">
+                            <div class="product-name">${nome}</div>
+                            <div class="product-price">${price}</div>
+                            <div class="product-actions">
+                                <button class="btn-buy" onclick="comprar('${link}')">
+                                    <i class="fas fa-shopping-cart"></i> Comprar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            grid.innerHTML = html;
+        }
+        
+        function searchProducts(event) {
+            if (event && event.key !== 'Enter') return;
+            
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query || query.length < 2) {
+                loadProducts(currentCategory, document.querySelector(`[data-cat="${currentCategory}"]`));
+                return;
+            }
+            
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+            
+            fetch(`/.netlify/functions/api/search?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(products => {
+                    renderProducts(products);
+                    document.getElementById('categoryTitle').textContent = `🔍 Resultados para "${query}"`;
+                });
+        }
+        
+        function comprar(link) {
+            if (link && link !== '#') {
+                window.open(link, '_blank');
+            } else {
+                alert('Link indisponível');
+            }
+        }
+        
+        function updateCount() {
+            fetch('/.netlify/functions/api/count')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('productCount').textContent = data.total || 0;
+                });
+        }
+        
+        window.onload = function() {
+            loadProducts('geral', document.querySelector('[data-cat="geral"]'));
+            updateCount();
+            setInterval(updateCount, 30000);
+        };
+    </script>
+
+</body>
+</html>
