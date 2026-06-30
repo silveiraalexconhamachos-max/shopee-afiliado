@@ -27,10 +27,11 @@ def sign_graphql(payload_str, ts):
     return hashlib.sha256(msg.encode()).hexdigest()
 
 def fetch_products(categoria_id=None, limit=50):
-    """Busca produtos REAIS da Shopee"""
+    """Busca produtos da Shopee"""
     try:
         ts = str(int(time.time()))
         
+        # Query GraphQL
         query = f"""query {{
     productOfferV2(sortType: 2, limit: {limit}, page: 1"""
         
@@ -47,13 +48,18 @@ def fetch_products(categoria_id=None, limit=50):
     }
 }"""
         
-        payload = {"query": query, "operationName": None, "variables": {}}
+        payload = {
+            "query": query,
+            "operationName": None,
+            "variables": {}
+        }
         payload_str = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
         signature = sign_graphql(payload_str, ts)
         
         headers = {
             "Authorization": f"SHA256 Credential={APP_ID}, Timestamp={ts}, Signature={signature}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
         
         response = requests.post(BASE_GRAPHQL, headers=headers, data=payload_str, timeout=15)
@@ -61,10 +67,11 @@ def fetch_products(categoria_id=None, limit=50):
         if response.status_code == 200:
             data = response.json()
             if "data" in data and "productOfferV2" in data["data"]:
-                return data["data"]["productOfferV2"]["nodes"]
+                nodes = data["data"]["productOfferV2"]["nodes"]
+                return nodes
         return []
     except Exception as e:
-        print(f"❌ Erro: {e}")
+        print(f"Erro na API: {e}")
         return []
 
 def get_products_by_category(categoria):
@@ -95,6 +102,7 @@ def api_products():
     else:
         produtos = get_products_by_category(categoria)
     
+    # Se não encontrou produtos, retorna lista vazia
     if not produtos:
         return jsonify([])
     
