@@ -6,6 +6,7 @@ import sqlite3
 import time
 import random
 import threading
+import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -16,11 +17,13 @@ BASE_GRAPHQL = "https://open-api.affiliate.shopee.com.br/graphql"
 DB_NAME = "produtos.db"
 
 # ============================================================
-# BANCO DE DADOS
+# BANCO DE DADOS - CORRIGIDO
 # ============================================================
 def init_db():
+    """Cria a tabela de produtos se não existir"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,9 +38,10 @@ def init_db():
             created_at TEXT
         )
     ''')
+    
     conn.commit()
     conn.close()
-    print("✅ Banco de dados inicializado")
+    print("✅ Banco de dados inicializado com sucesso!")
 
 def salvar_produto(produto):
     conn = sqlite3.connect(DB_NAME)
@@ -61,12 +65,23 @@ def salvar_produto(produto):
             produto['estrelas'],
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ))
+        conn.commit()
+        conn.close()
         return True
+    
+    conn.close()
     return False
 
 def get_todos_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    # Verifica se a tabela existe
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return []
+    
     cursor.execute("SELECT * FROM produtos ORDER BY id ASC")
     
     produtos = []
@@ -118,6 +133,12 @@ def buscar_produtos(query):
 def contar_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return 0
+    
     cursor.execute("SELECT COUNT(*) FROM produtos")
     count = cursor.fetchone()[0]
     conn.close()
@@ -126,6 +147,12 @@ def contar_produtos():
 def get_ultimo_id():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return 0
+    
     cursor.execute("SELECT MAX(id) FROM produtos")
     result = cursor.fetchone()[0]
     conn.close()
@@ -175,7 +202,7 @@ def fetch_products_from_api(limit=50):
         return []
 
 def buscar_e_salvar_produtos():
-    """Busca produtos da API e salva no banco (NUNCA substitui)"""
+    """Busca produtos da API e salva no banco"""
     print("🔄 Buscando novos produtos da Shopee...")
     
     produtos_api = fetch_products_from_api(50)
@@ -193,7 +220,7 @@ def buscar_e_salvar_produtos():
             continue
         
         ultimo_id += 1
-        id_unico = str(ultimo_id).zfill(4)  # 0001, 0002, 0003...
+        id_unico = str(ultimo_id).zfill(4)
         
         produto = {
             'id_unico': id_unico,
@@ -245,12 +272,11 @@ def api_count():
     return jsonify({'total': contar_produtos()})
 
 # ============================================================
-# SCHEDULER - RODA A CADA 2 DIAS (AUTOMÁTICO)
+# SCHEDULER - RODA A CADA 2 DIAS
 # ============================================================
 def scheduler():
-    """Roda a cada 48 horas para buscar novos produtos"""
     while True:
-        time.sleep(48 * 60 * 60)  # 48 horas
+        time.sleep(48 * 60 * 60)
         print("⏰ Atualização automática (2 dias)...")
         buscar_e_salvar_produtos()
 
@@ -263,6 +289,7 @@ def iniciar_scheduler():
 # MAIN
 # ============================================================
 if __name__ == '__main__':
+    # 🔥 CRIA O BANCO DE DADOS PRIMEIRO 🔥
     init_db()
     
     print("=" * 60)
@@ -272,15 +299,11 @@ if __name__ == '__main__':
     print("🚀 Acesse: http://localhost:5000")
     print("=" * 60)
     
-    # 🔥 BUSCA PRODUTOS AUTOMATICAMENTE AO INICIAR 🔥
-    if contar_produtos() == 0:
-        print("📥 Primeira execução - buscando produtos automaticamente...")
-        buscar_e_salvar_produtos()
-    else:
-        print("📥 Buscando novos produtos automaticamente...")
-        buscar_e_salvar_produtos()
+    # Busca produtos automaticamente ao iniciar
+    print("📥 Buscando produtos automaticamente...")
+    buscar_e_salvar_produtos()
     
-    # Inicia o scheduler (busca a cada 2 dias)
+    # Inicia o scheduler
     iniciar_scheduler()
     
     print("=" * 60)
