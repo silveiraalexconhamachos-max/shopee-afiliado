@@ -18,7 +18,6 @@
         .search button:hover { background:#d43c1e; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        /* PROMOÇÕES */
         .promo-section { background: linear-gradient(135deg, #ff6b35, #ff3c00); padding: 20px; border-radius: 15px; margin-bottom: 30px; color: white; }
         .promo-section h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
@@ -29,7 +28,6 @@
         .promo-card .badge { background: #ffe066; color: #333; padding: 2px 12px; border-radius: 20px; font-size:0.7rem; font-weight:700; display:inline-block; margin-top:5px; }
         .promo-card .id { font-size:0.7rem; opacity:0.7; margin-top:5px; }
         
-        /* GRID DE PRODUTOS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition:0.3s; position:relative; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
@@ -88,7 +86,7 @@
         </div>
 
         <div class="grid" id="produtos">
-            <div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>
+            <div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos REAIS da Shopee...</p></div>
         </div>
     </div>
 
@@ -97,7 +95,7 @@
 
         function loadProducts() {
             const grid = document.getElementById('produtos');
-            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>';
+            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos REAIS da Shopee...</p></div>';
 
             fetch('/api/products')
                 .then(r => r.json())
@@ -112,7 +110,10 @@
                         <div class="no-results">
                             <i class="fas fa-exclamation-circle"></i>
                             <h3>Erro ao carregar produtos</h3>
-                            <p>Tente novamente mais tarde</p>
+                            <p>Recarregue a página para tentar novamente</p>
+                            <button onclick="location.reload()" style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-sync-alt"></i> Recarregar
+                            </button>
                         </div>
                     `;
                 });
@@ -126,10 +127,7 @@
                     <div class="no-results">
                         <i class="fas fa-box-open"></i>
                         <h3>Nenhum produto encontrado</h3>
-                        <p>Os produtos serão carregados automaticamente em breve</p>
-                        <button onclick="loadProducts()" style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
-                            <i class="fas fa-sync-alt"></i> Recarregar
-                        </button>
+                        <p>Os produtos REAIS estão sendo carregados da Shopee</p>
                     </div>
                 `;
                 return;
@@ -143,8 +141,6 @@
                 const vendidos = p.vendidos || 0;
                 const estrelas = p.estrelas || 0;
                 const id = p.id_unico || '0000';
-
-                const estrelasTexto = '⭐'.repeat(Math.floor(estrelas)) + (estrelas % 1 >= 0.5 ? '½' : '');
 
                 return `
                     <div class="card">
@@ -195,7 +191,7 @@
                         grid.innerHTML = '<p style="color:rgba(255,255,255,0.7);text-align:center;">Nenhuma promoção no momento</p>';
                         return;
                     }
-                    grid.innerHTML = data.slice(0, 8).map(p => {
+                    grid.innerHTML = data.map(p => {
                         const img = p.imagem || 'https://via.placeholder.com/200x120/ff6b35/ffffff?text=Promo';
                         return `
                             <div class="promo-card" onclick="window.open('${p.link_afiliado || '#'}', '_blank')">
@@ -209,18 +205,18 @@
                 });
         }
 
+        // Atualiza contagem a cada 30 segundos
+        setInterval(() => {
+            fetch('/api/count')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('produtoCount').textContent = data.total;
+                });
+        }, 30000);
+
         window.onload = function() {
             loadProducts();
             loadPromocoes();
-
-            // Atualiza produtos a cada 1 hora (só a contagem)
-            setInterval(() => {
-                fetch('/api/count')
-                    .then(r => r.json())
-                    .then(data => {
-                        document.getElementById('produtoCount').textContent = data.total;
-                    });
-            }, 60000);
         };
     </script>
 
