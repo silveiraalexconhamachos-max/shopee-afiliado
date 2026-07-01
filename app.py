@@ -5,6 +5,7 @@ import json
 import sqlite3
 import time
 import os
+import threading
 from datetime import datetime
 
 app = Flask(__name__)
@@ -15,7 +16,6 @@ BASE_GRAPHQL = "https://open-api.affiliate.shopee.com.br/graphql"
 DB_NAME = "produtos.db"
 
 CATEGORIAS = {
-    "todos": None,
     "moda": 1000,
     "esporte": 2000,
     "informatica": 3000,
@@ -28,10 +28,8 @@ CATEGORIAS = {
 # BANCO DE DADOS
 # ============================================================
 def init_db():
-    """Cria a tabela de produtos se não existir"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS produtos (
             id TEXT PRIMARY KEY,
@@ -41,62 +39,46 @@ def init_db():
             link_afiliado TEXT,
             comissao REAL,
             categoria TEXT,
-            created_at TEXT,
-            updated_at TEXT
+            created_at TEXT
         )
     ''')
-    
     conn.commit()
     conn.close()
     print("✅ Banco de dados inicializado")
 
 def salvar_produto(produto, categoria):
-    """Salva um produto no banco de dados"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    produto_id = produto.get('id')
-    nome = produto.get('nome', 'Produto sem nome')
-    imagem = produto.get('imagem', '')
-    link = produto.get('link', '')
-    link_afiliado = produto.get('link_afiliado', '')
-    comissao = produto.get('comissao', 0)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Verifica se o produto já existe
-    cursor.execute("SELECT id FROM produtos WHERE id = ?", (produto_id,))
+    cursor.execute("SELECT id FROM produtos WHERE id = ?", (produto['id'],))
     existe = cursor.fetchone()
     
-    if existe:
-        # Atualiza o produto existente
+    if not existe:
         cursor.execute('''
-            UPDATE produtos 
-            SET nome = ?, imagem = ?, link = ?, link_afiliado = ?, comissao = ?, updated_at = ?
-            WHERE id = ?
-        ''', (nome, imagem, link, link_afiliado, comissao, now, produto_id))
-    else:
-        # Insere novo produto
-        cursor.execute('''
-            INSERT INTO produtos (id, nome, imagem, link, link_afiliado, comissao, categoria, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (produto_id, nome, imagem, link, link_afiliado, comissao, categoria, now, now))
+            INSERT INTO produtos (id, nome, imagem, link, link_afiliado, comissao, categoria, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            produto['id'],
+            produto['nome'],
+            produto['imagem'],
+            produto['link'],
+            produto['link_afiliado'],
+            produto['comissao'],
+            categoria,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
     
     conn.commit()
     conn.close()
 
-def get_produtos_por_categoria(categoria):
-    """Busca produtos do banco por categoria"""
+def get_produtos(categoria=None):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    if categoria == 'todos' or categoria is None:
-        cursor.execute('''
-            SELECT * FROM produtos ORDER BY created_at DESC
-        ''')
+    if categoria and categoria != 'todos':
+        cursor.execute("SELECT * FROM produtos WHERE categoria = ? ORDER BY created_at DESC", (categoria,))
     else:
-        cursor.execute('''
-            SELECT * FROM produtos WHERE categoria = ? ORDER BY created_at DESC
-        ''', (categoria,))
+        cursor.execute("SELECT * FROM produtos ORDER BY created_at DESC")
     
     produtos = []
     for row in cursor.fetchall():
@@ -108,22 +90,18 @@ def get_produtos_por_categoria(categoria):
             'link_afiliado': row[4],
             'comissao': row[5],
             'categoria': row[6],
-            'created_at': row[7],
-            'updated_at': row[8]
+            'created_at': row[7]
         })
     
     conn.close()
     return produtos
 
-def buscar_produtos_no_banco(query):
-    """Busca produtos por nome no banco"""
+def buscar_produtos_por_nome(query):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
     cursor.execute('''
-        SELECT * FROM produtos 
-        WHERE nome LIKE ? 
-        ORDER BY created_at DESC
+        SELECT * FROM produtos WHERE nome LIKE ? ORDER BY created_at DESC
     ''', (f'%{query}%',))
     
     produtos = []
@@ -136,15 +114,13 @@ def buscar_produtos_no_banco(query):
             'link_afiliado': row[4],
             'comissao': row[5],
             'categoria': row[6],
-            'created_at': row[7],
-            'updated_at': row[8]
+            'created_at': row[7]
         })
     
     conn.close()
     return produtos
 
 def contar_produtos():
-    """Conta quantos produtos estão salvos"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM produtos")
@@ -153,38 +129,28 @@ def contar_produtos():
     return count
 
 # ============================================================
-# FUNÇÕES DA API SHOPEE
+# API SHOPEE
 # ============================================================
 def sign_graphql(payload_str, ts):
     msg = f"{APP_ID}{ts}{payload_str}{PASSWORD}"
     return hashlib.sha256(msg.encode()).hexdigest()
 
-def fetch_products_from_api(categoria_id=None, limit=50):
-    """Busca produtos da API Shopee"""
+def fetch_products_from_api(categoria_id, limit=50):
     try:
         ts = str(int(time.time()))
         
         query = f"""query {{
-    productOfferV2(sortType: 2, limit: {limit}, page: 1"""
-        
-        if categoria_id:
-            query += f", categoryId: {categoria_id}"
-        
-        query += """) {
-        nodes {
+    productOfferV2(sortType: 2, limit: {limit}, page: 1, categoryId: {categoria_id}) {{
+        nodes {{
             productName
             imageUrl
             productLink
             commissionRate
-        }
-    }
-}"""
+        }}
+    }}
+}}"""
         
-        payload = {
-            "query": query,
-            "operationName": None,
-            "variables": {}
-        }
+        payload = {"query": query, "operationName": None, "variables": {}}
         payload_str = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
         signature = sign_graphql(payload_str, ts)
         
@@ -206,29 +172,21 @@ def fetch_products_from_api(categoria_id=None, limit=50):
         return []
 
 # ============================================================
-# ROTAS FLASK
+# CARREGAR PRODUTOS AUTOMATICAMENTE
 # ============================================================
-@app.route('/')
-def index():
-    return open('index.html').read()
-
-@app.route('/api/update-products', methods=['POST'])
-def update_products():
-    """Busca novos produtos da API e SALVA no banco"""
-    print("🔄 Buscando novos produtos da Shopee...")
+def carregar_produtos_automatico():
+    """Função que roda em background e carrega produtos de todas as categorias"""
+    print("🔄 Iniciando carga automática de produtos...")
     
     total_novos = 0
-    total_existentes = 0
     
     for categoria_nome, categoria_id in CATEGORIAS.items():
-        if categoria_nome == 'todos':
-            continue
-        
         print(f"📥 Buscando produtos da categoria: {categoria_nome}")
+        
         produtos = fetch_products_from_api(categoria_id, 30)
         
         if not produtos:
-            print(f"⚠️ Nenhum produto encontrado para {categoria_nome}")
+            print(f"⚠️ Nenhum produto para {categoria_nome}")
             continue
         
         for p in produtos:
@@ -236,54 +194,36 @@ def update_products():
             if not link:
                 continue
             
-            produto_id = hashlib.md5(link.encode()).hexdigest()[:12]
-            link_afiliado = f"{link}?mmp_pid=an_{APP_ID}"
-            nome = p.get('productName', 'Produto sem nome')
-            imagem = p.get('imageUrl', '')
-            comissao = float(p.get('commissionRate', 0)) * 100
-            
-            # Verifica se já existe
-            conn = sqlite3.connect(DB_NAME)
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM produtos WHERE id = ?", (produto_id,))
-            existe = cursor.fetchone()
-            conn.close()
-            
-            if existe:
-                total_existentes += 1
-            else:
-                total_novos += 1
-            
             produto = {
-                'id': produto_id,
-                'nome': nome,
-                'imagem': imagem,
+                'id': hashlib.md5(link.encode()).hexdigest()[:12],
+                'nome': p.get('productName', 'Produto sem nome'),
+                'imagem': p.get('imageUrl', ''),
                 'link': link,
-                'link_afiliado': link_afiliado,
-                'comissao': comissao
+                'link_afiliado': f"{link}?mmp_pid=an_{APP_ID}",
+                'comissao': float(p.get('commissionRate', 0)) * 100
             }
+            
             salvar_produto(produto, categoria_nome)
+            total_novos += 1
         
-        time.sleep(0.5)  # Pausa para não sobrecarregar a API
+        print(f"✅ {len(produtos)} produtos da categoria {categoria_nome}")
+        time.sleep(0.5)
     
     total = contar_produtos()
-    print(f"✅ {total_novos} NOVOS produtos adicionados!")
-    print(f"📊 Total de produtos no banco: {total}")
-    
-    return jsonify({
-        'success': True,
-        'novos': total_novos,
-        'existentes': total_existentes,
-        'total': total
-    })
+    print(f"🎯 TOTAL DE PRODUTOS CARREGADOS: {total}")
+
+# ============================================================
+# ROTAS
+# ============================================================
+@app.route('/')
+def index():
+    return open('index.html').read()
 
 @app.route('/api/products')
 def api_products():
-    """Retorna produtos do banco de dados"""
     categoria = request.args.get('categoria', 'todos')
-    produtos = get_produtos_por_categoria(categoria)
+    produtos = get_produtos(categoria)
     
-    # Formatar para o frontend
     formatted = []
     for p in produtos:
         formatted.append({
@@ -299,12 +239,11 @@ def api_products():
 
 @app.route('/api/search')
 def api_search():
-    """Busca produtos por nome no banco"""
     query = request.args.get('q', '')
     if not query or len(query) < 2:
         return jsonify([])
     
-    produtos = buscar_produtos_no_banco(query)
+    produtos = buscar_produtos_por_nome(query)
     
     formatted = []
     for p in produtos:
@@ -321,23 +260,26 @@ def api_search():
 
 @app.route('/api/count')
 def api_count():
-    """Retorna total de produtos no banco"""
     return jsonify({'total': contar_produtos()})
 
+# ============================================================
+# MAIN
+# ============================================================
 if __name__ == '__main__':
-    # Inicializa o banco de dados
     init_db()
     
     print("=" * 60)
-    print("🛍️ SHOPEE AFILIADO - COM BANCO DE DADOS")
+    print("🛍️ SHOPEE AFILIADO - CARREGA AUTOMÁTICO")
     print("=" * 60)
-    print(f"📊 Produtos no banco: {contar_produtos()}")
+    print("⏳ Carregando produtos da Shopee...")
+    print("=" * 60)
+    
+    # CARREGA OS PRODUTOS AUTOMATICAMENTE
+    carregar_produtos_automatico()
+    
+    print("=" * 60)
+    print(f"📊 TOTAL DE PRODUTOS: {contar_produtos()}")
     print("🚀 Acesse: http://localhost:5000")
-    print("=" * 60)
-    print("\n📌 COMANDOS:")
-    print("  - POST /api/update-products  -> Busca novos produtos da API")
-    print("  - GET /api/products          -> Lista produtos do banco")
-    print("  - GET /api/search?q=termo    -> Busca produtos por nome")
     print("=" * 60)
     
     app.run(host='0.0.0.0', port=5000)

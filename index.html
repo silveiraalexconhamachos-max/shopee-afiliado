@@ -14,10 +14,8 @@
         .search { max-width: 500px; margin: 20px auto; display: flex; padding: 0 20px; }
         .search input { flex:1; padding:12px; border:2px solid #ddd; border-radius:8px 0 0 8px; font-size:1rem; }
         .search button { padding:12px 24px; background:#ee4d2d; color:white; border:none; border-radius:0 8px 8px 0; cursor:pointer; }
-        .search button:hover { background:#d43c1e; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-        .categorias { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; flex-wrap: wrap; }
+        .categorias { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; flex-wrap: wrap; }
         .cat-btn { padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px; background: white; cursor: pointer; white-space: nowrap; transition:0.3s; }
         .cat-btn:hover { border-color: #ee4d2d; }
         .cat-btn.active { background: #ee4d2d; color: white; border-color: #ee4d2d; }
@@ -36,14 +34,10 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .no-results { text-align: center; padding: 60px 20px; grid-column: 1 / -1; color: #999; }
         .no-results i { font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block; }
-        .update-btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight:600; }
-        .update-btn:hover { background: #45a049; }
-        .update-btn i { margin-right: 8px; }
-        .badge { background: #ff6b6b; color: white; padding: 2px 10px; border-radius: 20px; font-size:0.8rem; }
+        .badge { background: #4CAF50; color: white; padding: 2px 12px; border-radius: 20px; font-size:0.8rem; margin-left:10px; }
         @media (max-width: 768px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .card img { height: 150px; }
-            .top-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -51,7 +45,7 @@
 
     <div class="header">
         <h1>🛍️ Shopee Afiliado</h1>
-        <p>Produtos com link de afiliado - <span id="produtoCount">0</span> produtos disponíveis</p>
+        <p><span id="produtoCount">0</span> produtos disponíveis</p>
     </div>
 
     <div class="search">
@@ -60,19 +54,14 @@
     </div>
 
     <div class="container">
-        <div class="top-bar">
-            <div class="categorias" id="categorias">
-                <button class="cat-btn active" onclick="loadProducts('todos', this)">🛍️ Todos</button>
-                <button class="cat-btn" onclick="loadProducts('moda', this)">👗 Moda</button>
-                <button class="cat-btn" onclick="loadProducts('esporte', this)">⚽ Esporte</button>
-                <button class="cat-btn" onclick="loadProducts('informatica', this)">💻 Informática</button>
-                <button class="cat-btn" onclick="loadProducts('eletronicos', this)">📱 Eletrônicos</button>
-                <button class="cat-btn" onclick="loadProducts('beleza', this)">💄 Beleza</button>
-                <button class="cat-btn" onclick="loadProducts('casa', this)">🏠 Casa</button>
-            </div>
-            <button class="update-btn" onclick="updateProducts()">
-                <i class="fas fa-cloud-download-alt"></i> Buscar Novos
-            </button>
+        <div class="categorias" id="categorias">
+            <button class="cat-btn active" onclick="loadProducts('todos', this)">🛍️ Todos</button>
+            <button class="cat-btn" onclick="loadProducts('moda', this)">👗 Moda</button>
+            <button class="cat-btn" onclick="loadProducts('esporte', this)">⚽ Esporte</button>
+            <button class="cat-btn" onclick="loadProducts('informatica', this)">💻 Informática</button>
+            <button class="cat-btn" onclick="loadProducts('eletronicos', this)">📱 Eletrônicos</button>
+            <button class="cat-btn" onclick="loadProducts('beleza', this)">💄 Beleza</button>
+            <button class="cat-btn" onclick="loadProducts('casa', this)">🏠 Casa</button>
         </div>
 
         <div class="grid" id="produtos">
@@ -112,10 +101,9 @@
                     <div class="no-results">
                         <i class="fas fa-box-open"></i>
                         <h3>Nenhum produto encontrado</h3>
-                        <p>Clique em "Buscar Novos" para adicionar produtos da Shopee</p>
-                        <button onclick="updateProducts()" 
-                                style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
-                            <i class="fas fa-cloud-download-alt"></i> Buscar Produtos
+                        <p>Os produtos estão sendo carregados automaticamente</p>
+                        <button onclick="location.reload()" style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-sync-alt"></i> Recarregar
                         </button>
                     </div>
                 `;
@@ -128,7 +116,14 @@
                 const link = p.link_afiliado || '#';
                 const comissao = p.comissao || 0;
                 const categoria = p.categoria || 'geral';
-                const nomeCategoria = {'moda':'👗 Moda','esporte':'⚽ Esporte','informatica':'💻 Informática','eletronicos':'📱 Eletrônicos','beleza':'💄 Beleza','casa':'🏠 Casa'}[categoria] || categoria;
+                const nomeCategoria = {
+                    'moda':'👗 Moda',
+                    'esporte':'⚽ Esporte',
+                    'informatica':'💻 Informática',
+                    'eletronicos':'📱 Eletrônicos',
+                    'beleza':'💄 Beleza',
+                    'casa':'🏠 Casa'
+                }[categoria] || categoria;
 
                 return `
                     <div class="card">
@@ -145,7 +140,6 @@
                 `;
             }).join('');
             
-            // Atualiza contagem
             document.getElementById('produtoCount').textContent = produtos.length;
         }
 
@@ -161,26 +155,6 @@
                 .then(r => r.json())
                 .then(data => {
                     renderizar(data);
-                });
-        }
-
-        function updateProducts() {
-            const btn = document.querySelector('.update-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
-            
-            fetch('/api/update-products', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    alert(`✅ ${data.novos} NOVOS produtos adicionados!\n📊 Total: ${data.total} produtos`);
-                    btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Buscar Novos';
-                    btn.disabled = false;
-                    loadProducts(categoriaAtual);
-                })
-                .catch(err => {
-                    alert('❌ Erro ao buscar produtos. Tente novamente.');
-                    btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Buscar Novos';
-                    btn.disabled = false;
                 });
         }
 
