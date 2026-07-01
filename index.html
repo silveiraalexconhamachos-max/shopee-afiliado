@@ -80,16 +80,33 @@
             const grid = document.getElementById('produtos');
             grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>';
 
+            // 🔥 USANDO URL RELATIVA - FUNCIONA NO RENDER 🔥
             const url = cat === 'todos' ? '/api/products' : `/api/products?categoria=${cat}`;
             
             fetch(url)
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`HTTP error! status: ${r.status}`);
+                    }
+                    return r.json();
+                })
                 .then(data => {
+                    console.log('✅ Produtos carregados:', data.length);
                     renderizar(data);
                 })
                 .catch(err => {
-                    console.error('Erro:', err);
-                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar</h3><p>Verifique se o servidor está rodando</p></div>';
+                    console.error('❌ Erro:', err);
+                    grid.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Erro ao carregar produtos</h3>
+                            <p>${err.message}</p>
+                            <button onclick="loadProducts('${categoriaAtual}')" 
+                                    style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-sync-alt"></i> Tentar novamente
+                            </button>
+                        </div>
+                    `;
                 });
         }
 
