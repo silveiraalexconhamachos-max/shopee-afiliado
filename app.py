@@ -17,17 +17,14 @@ BASE_GRAPHQL = "https://open-api.affiliate.shopee.com.br/graphql"
 DB_NAME = "produtos.db"
 
 # ============================================================
-# FUNÇÃO PARA CRIAR A TABELA SE NÃO EXISTIR
+# BANCO DE DADOS
 # ============================================================
 def criar_tabela_se_necessario():
-    """Cria a tabela produtos se não existir"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # Verifica se a tabela existe
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
     if not cursor.fetchone():
-        # Cria a tabela
         cursor.execute('''
             CREATE TABLE produtos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +40,7 @@ def criar_tabela_se_necessario():
             )
         ''')
         conn.commit()
-        print("✅ Tabela 'produtos' criada!")
+        print("✅ Tabela criada!")
     
     conn.close()
 
@@ -80,7 +77,6 @@ def get_todos_produtos():
     criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
     cursor.execute("SELECT * FROM produtos ORDER BY id ASC")
     
     produtos = []
@@ -149,14 +145,13 @@ def get_ultimo_id():
     return result if result else 0
 
 # ============================================================
-# API SHOPEE - SEU CÓDIGO ORIGINAL (QUE FUNCIONA)
+# API SHOPEE
 # ============================================================
 def sign_graphql(payload_str, ts):
     msg = f"{APP_ID}{ts}{payload_str}{PASSWORD}"
     return hashlib.sha256(msg.encode()).hexdigest()
 
 def fetch_products(categoria_id=None, limit=50):
-    """Busca produtos REAIS da Shopee"""
     try:
         ts = str(int(time.time()))
         
@@ -192,11 +187,8 @@ def fetch_products(categoria_id=None, limit=50):
         
         response = requests.post(BASE_GRAPHQL, headers=headers, data=payload_str, timeout=15)
         
-        print(f"Status: {response.status_code}")
-        
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ Produtos encontrados: {len(data.get('data', {}).get('productOfferV2', {}).get('nodes', []))}")
             if "data" in data and "productOfferV2" in data["data"]:
                 return data["data"]["productOfferV2"]["nodes"]
         return []
@@ -205,13 +197,12 @@ def fetch_products(categoria_id=None, limit=50):
         return []
 
 def buscar_e_salvar_produtos():
-    """Busca produtos REAIS da API e salva no banco"""
-    print("🔄 Buscando produtos REAIS da Shopee...")
+    print("🔄 Buscando novos produtos...")
     
     produtos_api = fetch_products(None, 50)
     
     if not produtos_api:
-        print("⚠️ Nenhum produto encontrado na API")
+        print("⚠️ Nenhum produto encontrado")
         return 0
     
     ultimo_id = get_ultimo_id()
@@ -239,12 +230,12 @@ def buscar_e_salvar_produtos():
         if salvar_produto(produto):
             novos += 1
     
-    print(f"✅ {novos} NOVOS produtos REAIS adicionados!")
+    print(f"✅ {novos} novos produtos adicionados!")
     print(f"📊 Total: {contar_produtos()} produtos")
     return novos
 
 # ============================================================
-# SCHEDULER - RODA A CADA 2 DIAS
+# SCHEDULER
 # ============================================================
 def scheduler():
     while True:
@@ -255,10 +246,10 @@ def scheduler():
 def iniciar_scheduler():
     thread = threading.Thread(target=scheduler, daemon=True)
     thread.start()
-    print("⏰ Scheduler iniciado - Busca novos produtos a cada 2 dias")
+    print("⏰ Scheduler iniciado - Busca a cada 2 dias")
 
 # ============================================================
-# ROTAS - CRIA A TABELA NA PRIMEIRA REQUISIÇÃO
+# ROTAS
 # ============================================================
 @app.route('/')
 def index():
@@ -269,7 +260,6 @@ def index():
 def api_products():
     criar_tabela_se_necessario()
     
-    # Se não tem produtos, busca da API
     if contar_produtos() == 0:
         buscar_e_salvar_produtos()
     
@@ -291,7 +281,6 @@ def api_search():
 def api_promocoes():
     criar_tabela_se_necessario()
     
-    # Se não tem produtos, busca da API
     if contar_produtos() == 0:
         buscar_e_salvar_produtos()
     
@@ -310,24 +299,18 @@ def api_count():
     criar_tabela_se_necessario()
     return jsonify({'total': contar_produtos()})
 
-# ============================================================
-# MAIN
-# ============================================================
 if __name__ == '__main__':
-    # Cria a tabela antes de iniciar
     criar_tabela_se_necessario()
     
     print("=" * 60)
-    print("🛍️ SHOPEE AFILIADO - PRODUTOS REAIS")
+    print("🛍️ MELHORES ACHADINHOS SHOPEE")
     print("=" * 60)
-    print(f"📊 Produtos no banco: {contar_produtos()}")
+    print(f"📊 Produtos: {contar_produtos()}")
     
-    # Busca produtos se não tiver nenhum
     if contar_produtos() == 0:
-        print("📥 Buscando produtos REAIS da Shopee...")
         buscar_e_salvar_produtos()
     
-    print(f"📊 TOTAL: {contar_produtos()} produtos REAIS")
+    print(f"📊 TOTAL: {contar_produtos()} produtos")
     print("🚀 Acesse: http://localhost:5000")
     print("=" * 60)
     
