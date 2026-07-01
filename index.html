@@ -3,59 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛍️ Achadinhos Shopee</title>
+    <title>🛍️ Shopee Afiliado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
         .header { background: linear-gradient(135deg, #ee4d2d, #ff6f3d); padding: 20px; color: white; text-align: center; }
         .header h1 { font-size: 2rem; }
-        .header h1 span { color: #ffe066; }
         .search { max-width: 500px; margin: 20px auto; display: flex; padding: 0 20px; }
         .search input { flex:1; padding:12px; border:2px solid #ddd; border-radius:8px 0 0 8px; font-size:1rem; }
         .search button { padding:12px 24px; background:#ee4d2d; color:white; border:none; border-radius:0 8px 8px 0; cursor:pointer; }
-        .search button:hover { background:#d43c1e; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .categorias { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; flex-wrap: wrap; }
-        .cat-btn { padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px; background: white; cursor: pointer; white-space: nowrap; transition:0.3s; }
-        .cat-btn:hover { border-color: #ee4d2d; }
+        .cat-btn { padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px; background: white; cursor: pointer; white-space: nowrap; }
         .cat-btn.active { background: #ee4d2d; color: white; border-color: #ee4d2d; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition:0.3s; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .card img { width: 100%; height: 200px; object-fit: cover; background: #f8f8f8; }
         .card .info { padding: 15px; }
         .card .nome { font-weight: 600; margin-bottom: 8px; height: 40px; overflow: hidden; font-size:0.95rem; }
-        .card .preco { color: #ee4d2d; font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; }
-        .card .rating { color: #f5a623; font-size: 0.9rem; margin-bottom: 5px; }
         .card .comissao { color: #666; font-size: 0.8rem; margin-bottom: 10px; }
-        .btn-buy { background: #ee4d2d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 600; transition:0.3s; }
-        .btn-buy:hover { background: #d43c1e; transform: scale(1.02); }
+        .btn-buy { background: #ee4d2d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 600; }
+        .btn-buy:hover { background: #d43c1e; }
         .loading { text-align: center; padding: 40px; color: #666; grid-column: 1 / -1; }
         .loading i { font-size: 2rem; color: #ee4d2d; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .no-results { text-align: center; padding: 60px 20px; grid-column: 1 / -1; color: #999; }
         .no-results i { font-size: 3rem; color: #ddd; margin-bottom: 15px; display: block; }
-        .info-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: #666; font-size: 0.9rem; flex-wrap: wrap; gap: 10px; }
-        .promo-section { background: linear-gradient(135deg, #ff6b35, #ff3c00); margin-bottom: 30px; padding: 20px; border-radius: 15px; color: white; }
-        .promo-section h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .promo-card { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; transition:0.3s; }
-        .promo-card:hover { background: rgba(255,255,255,0.25); transform: scale(1.02); }
-        .promo-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
-        .promo-card .desconto-badge { background: #ffe066; color: #333; padding: 2px 12px; border-radius: 20px; font-size:0.8rem; font-weight:700; display:inline-block; margin-top:8px; }
+        .info-bar { display: flex; justify-content: space-between; margin-bottom: 20px; color: #666; font-size:0.9rem; flex-wrap:wrap; gap:10px; }
         @media (max-width: 768px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .card img { height: 150px; }
-            .promo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>🛍️ Achadinhos <span>Shopee</span></h1>
-        <p>Os melhores produtos com link de afiliado</p>
+        <h1>🛍️ Shopee Afiliado</h1>
+        <p>Produtos com link de afiliado</p>
     </div>
 
     <div class="search">
@@ -64,15 +51,6 @@
     </div>
 
     <div class="container">
-        <!-- DESCONTO DO DIA -->
-        <div class="promo-section" id="promoSection">
-            <h2><i class="fas fa-bolt"></i> 🔥 Desconto do Dia</h2>
-            <div class="promo-grid" id="promoGrid">
-                <div style="color:rgba(255,255,255,0.7);text-align:center;padding:20px;">Carregando promoções...</div>
-            </div>
-        </div>
-
-        <!-- CATEGORIAS -->
         <div class="categorias" id="categorias">
             <button class="cat-btn active" onclick="loadProducts('todos', this)">🛍️ Todos</button>
             <button class="cat-btn" onclick="loadProducts('moda', this)">👗 Moda</button>
@@ -84,17 +62,15 @@
         </div>
 
         <div class="info-bar">
-            <span><i class="fas fa-box"></i> <span id="count">Carregando produtos...</span></span>
-            <span>🔄 Atualizado: <span id="time">Agora</span></span>
+            <span><i class="fas fa-box"></i> <span id="count">Carregando...</span></span>
         </div>
 
         <div class="grid" id="produtos">
-            <div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>
+            <div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos da Shopee...</p></div>
         </div>
     </div>
 
     <script>
-        let todosProdutos = [];
         let categoriaAtual = 'todos';
 
         function loadProducts(cat, btn) {
@@ -103,49 +79,54 @@
             if (btn) btn.classList.add('active');
 
             const grid = document.getElementById('produtos');
-            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos...</p></div>';
+            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando produtos da Shopee...</p></div>';
 
-            fetch(`/api/products?categoria=${cat}`)
+            const url = cat === 'todos' ? '/api/products' : `/api/products?categoria=${cat}`;
+            
+            fetch(url)
                 .then(r => r.json())
                 .then(data => {
-                    todosProdutos = data;
-                    document.getElementById('count').textContent = `${data.length} produtos encontrados`;
-                    document.getElementById('time').textContent = new Date().toLocaleTimeString('pt-BR');
+                    document.getElementById('count').textContent = `${data.length} produtos reais da Shopee`;
                     renderizar(data);
                 })
                 .catch(err => {
                     console.error('Erro:', err);
-                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar</h3><p>Tente novamente</p></div>';
+                    grid.innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><h3>Erro ao carregar</h3><p>Verifique se a API está funcionando</p></div>';
                 });
         }
 
         function renderizar(produtos) {
             const grid = document.getElementById('produtos');
+            
             if (!produtos || produtos.length === 0) {
-                grid.innerHTML = '<div class="no-results"><i class="fas fa-box-open"></i><h3>Nenhum produto encontrado</h3><p>Tente outra categoria</p></div>';
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Nenhum produto encontrado</h3>
+                        <p>Tente outra categoria ou atualize a página</p>
+                        <button onclick="loadProducts('todos', document.querySelector('.cat-btn'))" 
+                                style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-sync-alt"></i> Tentar novamente
+                        </button>
+                    </div>
+                `;
                 return;
             }
 
             grid.innerHTML = produtos.map(p => {
-                const img = p.img || 'https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Achadinhos';
+                const img = p.img || 'https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Shopee';
                 const nome = p.nome || 'Produto sem nome';
                 const link = p.link_afiliado || '#';
-                const preco = p.preco_formatado || 'R$ 0,00';
-                const rating = p.rating || 0;
                 const comissao = p.comissao || 0;
-                const desconto = p.desconto || 0;
 
                 return `
                     <div class="card">
-                        <img src="${img}" alt="${nome}" onerror="this.src='https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Achadinhos'">
+                        <img src="${img}" alt="${nome}" onerror="this.src='https://via.placeholder.com/300x300/ee4d2d/ffffff?text=Shopee'">
                         <div class="info">
                             <div class="nome">${nome}</div>
-                            <div class="preco">${preco}</div>
-                            ${rating > 0 ? `<div class="rating">⭐ ${rating.toFixed(1)}</div>` : ''}
                             ${comissao > 0 ? `<div class="comissao">💸 Comissão: ${comissao.toFixed(1)}%</div>` : ''}
-                            ${desconto > 0 ? `<div style="color:#ee4d2d;font-weight:700;margin-bottom:8px;">🔥 ${desconto}% OFF</div>` : ''}
                             <button class="btn-buy" onclick="window.open('${link}', '_blank')">
-                                <i class="fas fa-shopping-cart"></i> Comprar
+                                <i class="fas fa-shopping-cart"></i> Ver na Shopee
                             </button>
                         </div>
                     </div>
@@ -158,6 +139,9 @@
             const q = document.getElementById('searchInput').value.trim();
             if (!q) { loadProducts(categoriaAtual); return; }
 
+            const grid = document.getElementById('produtos');
+            grid.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+
             fetch(`/api/search?q=${encodeURIComponent(q)}`)
                 .then(r => r.json())
                 .then(data => {
@@ -166,29 +150,7 @@
                 });
         }
 
-        function loadPromocoes() {
-            fetch('/api/promocoes')
-                .then(r => r.json())
-                .then(data => {
-                    const grid = document.getElementById('promoGrid');
-                    if (!data || data.length === 0) {
-                        grid.innerHTML = '<p style="color:rgba(255,255,255,0.7);text-align:center;">Nenhuma promoção no momento</p>';
-                        return;
-                    }
-                    grid.innerHTML = data.slice(0, 8).map(p => `
-                        <div class="promo-card" onclick="window.open('${p.link_afiliado || '#'}', '_blank')">
-                            <img src="${p.img || 'https://via.placeholder.com/200x120/ff6b35/ffffff?text=Promo'}" 
-                                 onerror="this.src='https://via.placeholder.com/200x120/ff6b35/ffffff?text=Promo'">
-                            <div style="font-size:0.85rem;margin-top:8px;">${p.nome.substring(0, 40)}${p.nome.length > 40 ? '...' : ''}</div>
-                            <div style="font-weight:700;">${p.preco_formatado}</div>
-                            <span class="desconto-badge">🔥 ${p.desconto}% OFF</span>
-                        </div>
-                    `).join('');
-                });
-        }
-
         window.onload = function() {
-            loadPromocoes();
             loadProducts('todos', document.querySelector('.cat-btn'));
         };
     </script>

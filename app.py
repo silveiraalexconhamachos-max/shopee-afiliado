@@ -4,7 +4,6 @@ import hashlib
 import json
 from datetime import datetime
 import time
-import random
 
 app = Flask(__name__)
 
@@ -27,11 +26,10 @@ def sign_graphql(payload_str, ts):
     return hashlib.sha256(msg.encode()).hexdigest()
 
 def fetch_products(categoria_id=None, limit=50):
-    """Busca produtos da Shopee"""
+    """Busca produtos REAIS da Shopee"""
     try:
         ts = str(int(time.time()))
         
-        # Query GraphQL
         query = f"""query {{
     productOfferV2(sortType: 2, limit: {limit}, page: 1"""
         
@@ -64,30 +62,17 @@ def fetch_products(categoria_id=None, limit=50):
         
         response = requests.post(BASE_GRAPHQL, headers=headers, data=payload_str, timeout=15)
         
+        print(f"Status: {response.status_code}")
+        
         if response.status_code == 200:
             data = response.json()
+            print(f"✅ Produtos encontrados: {len(data.get('data', {}).get('productOfferV2', {}).get('nodes', []))}")
             if "data" in data and "productOfferV2" in data["data"]:
-                nodes = data["data"]["productOfferV2"]["nodes"]
-                return nodes
+                return data["data"]["productOfferV2"]["nodes"]
         return []
     except Exception as e:
-        print(f"Erro na API: {e}")
+        print(f"❌ Erro na API: {e}")
         return []
-
-def get_products_by_category(categoria):
-    categoria_id = CATEGORIAS.get(categoria)
-    return fetch_products(categoria_id, limit=50)
-
-def get_all_products():
-    """Busca produtos de todas as categorias"""
-    todos = []
-    for cat, cat_id in CATEGORIAS.items():
-        if cat != "todos":
-            produtos = fetch_products(cat_id, limit=30)
-            if produtos:
-                todos.extend(produtos)
-            time.sleep(0.3)
-    return todos
 
 @app.route('/')
 def index():
@@ -98,51 +83,52 @@ def api_products():
     categoria = request.args.get('categoria', 'todos')
     
     if categoria == 'todos':
-        produtos = get_all_products()
+        produtos = fetch_products(None, 50)
     else:
-        produtos = get_products_by_category(categoria)
+        categoria_id = CATEGORIAS.get(categoria)
+        produtos = fetch_products(categoria_id, 50)
     
-    # Se não encontrou produtos, retorna lista vazia
+    # SE NÃO TEM PRODUTOS, RETORNA VAZIO (SEM FALLBACK)
     if not produtos:
         return jsonify([])
     
     formatted = []
     for p in produtos:
         link = p.get('productLink', '')
-        preco = random.randint(29, 399)  # Preço aleatório para demonstração
+        nome = p.get('productName', 'Produto sem nome')
+        img = p.get('imageUrl', '')
+        comissao = float(p.get('commissionRate', 0)) * 100
         
         formatted.append({
-            'nome': p.get('productName', 'Produto'),
-            'img': p.get('imageUrl', ''),
-            'preco': preco,
-            'preco_formatado': f"R$ {preco:.2f}".replace('.', ','),
+            'nome': nome,
+            'img': img,
             'link_afiliado': f"{link}?mmp_pid=an_{APP_ID}" if link else '#',
-            'comissao': float(p.get('commissionRate', 0)) * 100,
-            'rating': round(random.uniform(3.5, 5.0), 1),
-            'avaliacoes': random.randint(10, 500),
-            'desconto': random.randint(10, 40) if random.random() > 0.5 else 0
+            'comissao': comissao,
+            'preco': '0.00',  # Será atualizado depois
+            'preco_formatado': 'R$ 0,00',
+            'rating': 0,
+            'desconto': 0
         })
     
-    return jsonify(formatted[:100])
+    return jsonify(formatted)
 
 @app.route('/api/promocoes')
 def api_promocoes():
-    produtos = get_all_products()
+    produtos = fetch_products(None, 30)
+    
     if not produtos:
         return jsonify([])
     
     formatted = []
     for p in produtos[:20]:
         link = p.get('productLink', '')
-        preco = random.randint(29, 399)
-        
         formatted.append({
             'nome': p.get('productName', 'Produto'),
             'img': p.get('imageUrl', ''),
-            'preco_formatado': f"R$ {preco:.2f}".replace('.', ','),
             'link_afiliado': f"{link}?mmp_pid=an_{APP_ID}" if link else '#',
-            'rating': round(random.uniform(3.5, 5.0), 1),
-            'desconto': random.randint(15, 50)
+            'preco_formatado': 'R$ 0,00',
+            'rating': 0,
+            'desconto': 0
         })
     
     return jsonify(formatted)
@@ -153,7 +139,7 @@ def api_search():
     if not query or len(query) < 2:
         return jsonify([])
     
-    produtos = get_all_products()
+    produtos = fetch_products(None, 50)
     if not produtos:
         return jsonify([])
     
@@ -162,14 +148,12 @@ def api_search():
         nome = p.get('productName', '').lower()
         if query.lower() in nome:
             link = p.get('productLink', '')
-            preco = random.randint(29, 399)
-            
             formatted.append({
                 'nome': p.get('productName', ''),
                 'img': p.get('imageUrl', ''),
-                'preco_formatado': f"R$ {preco:.2f}".replace('.', ','),
                 'link_afiliado': f"{link}?mmp_pid=an_{APP_ID}" if link else '#',
-                'rating': round(random.uniform(3.5, 5.0), 1)
+                'preco_formatado': 'R$ 0,00',
+                'rating': 0
             })
     
     return jsonify(formatted[:50])
