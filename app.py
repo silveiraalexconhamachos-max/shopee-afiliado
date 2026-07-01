@@ -6,6 +6,7 @@ import sqlite3
 import time
 import random
 import threading
+import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -19,8 +20,10 @@ DB_NAME = "produtos.db"
 # BANCO DE DADOS
 # ============================================================
 def init_db():
+    """CRIA A TABELA SE NÃO EXISTIR"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,9 +38,10 @@ def init_db():
             created_at TEXT
         )
     ''')
+    
     conn.commit()
     conn.close()
-    print("✅ Banco de dados inicializado!")
+    print("✅ Banco de dados e tabela criados com sucesso!")
 
 def salvar_produto(produto):
     conn = sqlite3.connect(DB_NAME)
@@ -70,6 +74,13 @@ def salvar_produto(produto):
 def get_todos_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    # VERIFICA SE A TABELA EXISTE ANTES DE CONSULTAR
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return []
+    
     cursor.execute("SELECT * FROM produtos ORDER BY id ASC")
     
     produtos = []
@@ -121,6 +132,12 @@ def buscar_produtos(query):
 def contar_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return 0
+    
     cursor.execute("SELECT COUNT(*) FROM produtos")
     count = cursor.fetchone()[0]
     conn.close()
@@ -129,6 +146,12 @@ def contar_produtos():
 def get_ultimo_id():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        conn.close()
+        return 0
+    
     cursor.execute("SELECT MAX(id) FROM produtos")
     result = cursor.fetchone()[0]
     conn.close()
@@ -172,7 +195,9 @@ def fetch_products_from_api(limit=50):
         if response.status_code == 200:
             data = response.json()
             if "data" in data and "productOfferV2" in data["data"]:
-                return data["data"]["productOfferV2"]["nodes"]
+                nodes = data["data"]["productOfferV2"]["nodes"]
+                print(f"✅ API retornou {len(nodes)} produtos")
+                return nodes
         return []
     except Exception as e:
         print(f"❌ Erro na API: {e}")
@@ -275,6 +300,7 @@ def api_count():
 # MAIN
 # ============================================================
 if __name__ == '__main__':
+    # 🔥 CRIA O BANCO E A TABELA PRIMEIRO 🔥
     init_db()
     
     print("=" * 60)
@@ -283,12 +309,8 @@ if __name__ == '__main__':
     print(f"📊 Produtos no banco: {contar_produtos()}")
     
     # 🔥 BUSCA PRODUTOS REAIS DA API 🔥
-    if contar_produtos() == 0:
-        print("📥 Primeira execução - buscando produtos REAIS da Shopee...")
-        buscar_e_salvar_produtos()
-    else:
-        print("📥 Buscando MAIS produtos REAIS da Shopee...")
-        buscar_e_salvar_produtos()
+    print("📥 Buscando produtos REAIS da Shopee...")
+    buscar_e_salvar_produtos()
     
     print(f"📊 TOTAL FINAL: {contar_produtos()} produtos REAIS")
     print("🚀 Acesse: http://localhost:5000")

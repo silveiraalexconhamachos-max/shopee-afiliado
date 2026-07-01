@@ -183,7 +183,6 @@
         }
 
         function loadPromocoes() {
-            // PROMOÇÕES PEGAM PRODUTOS DO SITE (DO BANCO)
             fetch('/api/promocoes')
                 .then(r => r.json())
                 .then(data => {
