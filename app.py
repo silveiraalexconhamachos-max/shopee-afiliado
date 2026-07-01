@@ -6,6 +6,7 @@ import sqlite3
 import time
 import random
 import threading
+import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -16,30 +17,38 @@ BASE_GRAPHQL = "https://open-api.affiliate.shopee.com.br/graphql"
 DB_NAME = "produtos.db"
 
 # ============================================================
-# BANCO DE DADOS
+# FUNÇÃO PARA CRIAR A TABELA SE NÃO EXISTIR
 # ============================================================
-def init_db():
+def criar_tabela_se_necessario():
+    """Cria a tabela produtos se não existir"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS produtos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            id_unico TEXT,
-            nome TEXT,
-            imagem TEXT,
-            link TEXT,
-            link_afiliado TEXT,
-            comissao REAL,
-            vendidos INTEGER,
-            estrelas REAL,
-            created_at TEXT
-        )
-    ''')
-    conn.commit()
+    
+    # Verifica se a tabela existe
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
+    if not cursor.fetchone():
+        # Cria a tabela
+        cursor.execute('''
+            CREATE TABLE produtos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_unico TEXT,
+                nome TEXT,
+                imagem TEXT,
+                link TEXT,
+                link_afiliado TEXT,
+                comissao REAL,
+                vendidos INTEGER,
+                estrelas REAL,
+                created_at TEXT
+            )
+        ''')
+        conn.commit()
+        print("✅ Tabela 'produtos' criada!")
+    
     conn.close()
-    print("✅ Banco de dados criado!")
 
 def salvar_produto(produto):
+    criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
@@ -68,8 +77,10 @@ def salvar_produto(produto):
     return False
 
 def get_todos_produtos():
+    criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+    
     cursor.execute("SELECT * FROM produtos ORDER BY id ASC")
     
     produtos = []
@@ -91,6 +102,7 @@ def get_todos_produtos():
     return produtos
 
 def buscar_produtos(query):
+    criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
@@ -119,6 +131,7 @@ def buscar_produtos(query):
     return produtos
 
 def contar_produtos():
+    criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM produtos")
@@ -127,6 +140,7 @@ def contar_produtos():
     return count
 
 def get_ultimo_id():
+    criar_tabela_se_necessario()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT MAX(id) FROM produtos")
@@ -135,14 +149,14 @@ def get_ultimo_id():
     return result if result else 0
 
 # ============================================================
-# API SHOPEE - PRODUTOS REAIS (SEU CÓDIGO ORIGINAL)
+# API SHOPEE - SEU CÓDIGO ORIGINAL (QUE FUNCIONA)
 # ============================================================
 def sign_graphql(payload_str, ts):
     msg = f"{APP_ID}{ts}{payload_str}{PASSWORD}"
     return hashlib.sha256(msg.encode()).hexdigest()
 
-def fetch_products_from_api(categoria_id=None, limit=50):
-    """Busca produtos REAIS da Shopee - SEU CÓDIGO ORIGINAL"""
+def fetch_products(categoria_id=None, limit=50):
+    """Busca produtos REAIS da Shopee"""
     try:
         ts = str(int(time.time()))
         
@@ -194,7 +208,7 @@ def buscar_e_salvar_produtos():
     """Busca produtos REAIS da API e salva no banco"""
     print("🔄 Buscando produtos REAIS da Shopee...")
     
-    produtos_api = fetch_products_from_api(None, 50)
+    produtos_api = fetch_products(None, 50)
     
     if not produtos_api:
         print("⚠️ Nenhum produto encontrado na API")
@@ -209,7 +223,7 @@ def buscar_e_salvar_produtos():
             continue
         
         ultimo_id += 1
-        id_unico = str(ultimo_id).zfill(4)  # 0001, 0002...
+        id_unico = str(ultimo_id).zfill(4)
         
         produto = {
             'id_unico': id_unico,
@@ -234,7 +248,7 @@ def buscar_e_salvar_produtos():
 # ============================================================
 def scheduler():
     while True:
-        time.sleep(48 * 60 * 60)  # 48 horas = 2 dias
+        time.sleep(48 * 60 * 60)
         print("⏰ Atualização automática (2 dias)...")
         buscar_e_salvar_produtos()
 
@@ -244,20 +258,28 @@ def iniciar_scheduler():
     print("⏰ Scheduler iniciado - Busca novos produtos a cada 2 dias")
 
 # ============================================================
-# ROTAS
+# ROTAS - CRIA A TABELA NA PRIMEIRA REQUISIÇÃO
 # ============================================================
 @app.route('/')
 def index():
+    criar_tabela_se_necessario()
     return open('index.html').read()
 
 @app.route('/api/products')
 def api_products():
-    """Retorna TODOS os produtos do banco"""
+    criar_tabela_se_necessario()
+    
+    # Se não tem produtos, busca da API
+    if contar_produtos() == 0:
+        buscar_e_salvar_produtos()
+    
     produtos = get_todos_produtos()
     return jsonify(produtos)
 
 @app.route('/api/search')
 def api_search():
+    criar_tabela_se_necessario()
+    
     query = request.args.get('q', '')
     if not query or len(query) < 1:
         return jsonify([])
@@ -267,13 +289,17 @@ def api_search():
 
 @app.route('/api/promocoes')
 def api_promocoes():
-    """Pega produtos ALEATÓRIOS do banco (DO SITE) para promoções"""
+    criar_tabela_se_necessario()
+    
+    # Se não tem produtos, busca da API
+    if contar_produtos() == 0:
+        buscar_e_salvar_produtos()
+    
     produtos = get_todos_produtos()
     
     if not produtos:
         return jsonify([])
     
-    # Embaralha e pega até 8 produtos aleatórios DO SITE
     random.shuffle(produtos)
     promocoes = produtos[:8]
     
@@ -281,32 +307,28 @@ def api_promocoes():
 
 @app.route('/api/count')
 def api_count():
+    criar_tabela_se_necessario()
     return jsonify({'total': contar_produtos()})
 
 # ============================================================
 # MAIN
 # ============================================================
 if __name__ == '__main__':
-    init_db()
+    # Cria a tabela antes de iniciar
+    criar_tabela_se_necessario()
     
     print("=" * 60)
     print("🛍️ SHOPEE AFILIADO - PRODUTOS REAIS")
     print("=" * 60)
     print(f"📊 Produtos no banco: {contar_produtos()}")
     
-    # 🔥 BUSCA PRODUTOS REAIS DA API 🔥
+    # Busca produtos se não tiver nenhum
     if contar_produtos() == 0:
-        print("📥 Primeira execução - buscando produtos REAIS da Shopee...")
-        buscar_e_salvar_produtos()
-    else:
-        print("📥 Buscando MAIS produtos REAIS da Shopee...")
+        print("📥 Buscando produtos REAIS da Shopee...")
         buscar_e_salvar_produtos()
     
-    print(f"📊 TOTAL FINAL: {contar_produtos()} produtos REAIS")
+    print(f"📊 TOTAL: {contar_produtos()} produtos REAIS")
     print("🚀 Acesse: http://localhost:5000")
     print("=" * 60)
-    
-    # Inicia o scheduler
-    iniciar_scheduler()
     
     app.run(host='0.0.0.0', port=5000)
