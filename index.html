@@ -82,7 +82,7 @@
 
         <div class="info-bar">
             <span><i class="fas fa-box"></i> <strong>Todos os Produtos</strong></span>
-            <span><i class="fas fa-sync-alt"></i> Atualizado automaticamente a cada 2 dias</span>
+            <span><i class="fas fa-sync-alt"></i> Produtos REAIS da Shopee</span>
         </div>
 
         <div class="grid" id="produtos">
@@ -128,6 +128,9 @@
                         <i class="fas fa-box-open"></i>
                         <h3>Nenhum produto encontrado</h3>
                         <p>Os produtos REAIS estão sendo carregados da Shopee</p>
+                        <button onclick="loadProducts()" style="margin-top:20px;padding:10px 30px;background:#ee4d2d;color:white;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-sync-alt"></i> Tentar novamente
+                        </button>
                     </div>
                 `;
                 return;
@@ -183,6 +186,7 @@
         }
 
         function loadPromocoes() {
+            // 🔥 PROMOÇÕES PEGAM PRODUTOS DO SITE (DO BANCO) 🔥
             fetch('/api/promocoes')
                 .then(r => r.json())
                 .then(data => {

@@ -6,7 +6,6 @@ import sqlite3
 import time
 import random
 import threading
-import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -20,10 +19,8 @@ DB_NAME = "produtos.db"
 # BANCO DE DADOS
 # ============================================================
 def init_db():
-    """CRIA A TABELA SE NÃO EXISTIR"""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,10 +35,9 @@ def init_db():
             created_at TEXT
         )
     ''')
-    
     conn.commit()
     conn.close()
-    print("✅ Banco de dados e tabela criados com sucesso!")
+    print("✅ Banco de dados criado!")
 
 def salvar_produto(produto):
     conn = sqlite3.connect(DB_NAME)
@@ -74,13 +70,6 @@ def salvar_produto(produto):
 def get_todos_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # VERIFICA SE A TABELA EXISTE ANTES DE CONSULTAR
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
-    if not cursor.fetchone():
-        conn.close()
-        return []
-    
     cursor.execute("SELECT * FROM produtos ORDER BY id ASC")
     
     produtos = []
@@ -132,12 +121,6 @@ def buscar_produtos(query):
 def contar_produtos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
-    if not cursor.fetchone():
-        conn.close()
-        return 0
-    
     cursor.execute("SELECT COUNT(*) FROM produtos")
     count = cursor.fetchone()[0]
     conn.close()
@@ -146,41 +129,44 @@ def contar_produtos():
 def get_ultimo_id():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produtos'")
-    if not cursor.fetchone():
-        conn.close()
-        return 0
-    
     cursor.execute("SELECT MAX(id) FROM produtos")
     result = cursor.fetchone()[0]
     conn.close()
     return result if result else 0
 
 # ============================================================
-# API SHOPEE - PRODUTOS REAIS
+# API SHOPEE - PRODUTOS REAIS (SEU CÓDIGO ORIGINAL)
 # ============================================================
 def sign_graphql(payload_str, ts):
     msg = f"{APP_ID}{ts}{payload_str}{PASSWORD}"
     return hashlib.sha256(msg.encode()).hexdigest()
 
-def fetch_products_from_api(limit=50):
-    """Busca produtos REAIS da Shopee"""
+def fetch_products_from_api(categoria_id=None, limit=50):
+    """Busca produtos REAIS da Shopee - SEU CÓDIGO ORIGINAL"""
     try:
         ts = str(int(time.time()))
         
         query = f"""query {{
-    productOfferV2(sortType: 2, limit: {limit}, page: 1) {{
-        nodes {{
+    productOfferV2(sortType: 2, limit: {limit}, page: 1"""
+        
+        if categoria_id:
+            query += f", categoryId: {categoria_id}"
+        
+        query += """) {
+        nodes {
             productName
             imageUrl
             productLink
             commissionRate
-        }}
-    }}
-}}"""
+        }
+    }
+}"""
         
-        payload = {"query": query, "operationName": None, "variables": {}}
+        payload = {
+            "query": query,
+            "operationName": None,
+            "variables": {}
+        }
         payload_str = json.dumps(payload, separators=(',', ':'), ensure_ascii=False)
         signature = sign_graphql(payload_str, ts)
         
@@ -192,12 +178,13 @@ def fetch_products_from_api(limit=50):
         
         response = requests.post(BASE_GRAPHQL, headers=headers, data=payload_str, timeout=15)
         
+        print(f"Status: {response.status_code}")
+        
         if response.status_code == 200:
             data = response.json()
+            print(f"✅ Produtos encontrados: {len(data.get('data', {}).get('productOfferV2', {}).get('nodes', []))}")
             if "data" in data and "productOfferV2" in data["data"]:
-                nodes = data["data"]["productOfferV2"]["nodes"]
-                print(f"✅ API retornou {len(nodes)} produtos")
-                return nodes
+                return data["data"]["productOfferV2"]["nodes"]
         return []
     except Exception as e:
         print(f"❌ Erro na API: {e}")
@@ -207,7 +194,7 @@ def buscar_e_salvar_produtos():
     """Busca produtos REAIS da API e salva no banco"""
     print("🔄 Buscando produtos REAIS da Shopee...")
     
-    produtos_api = fetch_products_from_api(50)
+    produtos_api = fetch_products_from_api(None, 50)
     
     if not produtos_api:
         print("⚠️ Nenhum produto encontrado na API")
@@ -222,7 +209,7 @@ def buscar_e_salvar_produtos():
             continue
         
         ultimo_id += 1
-        id_unico = str(ultimo_id).zfill(4)
+        id_unico = str(ultimo_id).zfill(4)  # 0001, 0002...
         
         produto = {
             'id_unico': id_unico,
@@ -280,7 +267,7 @@ def api_search():
 
 @app.route('/api/promocoes')
 def api_promocoes():
-    """Pega produtos ALEATÓRIOS do banco (do site) para promoções"""
+    """Pega produtos ALEATÓRIOS do banco (DO SITE) para promoções"""
     produtos = get_todos_produtos()
     
     if not produtos:
@@ -300,7 +287,6 @@ def api_count():
 # MAIN
 # ============================================================
 if __name__ == '__main__':
-    # 🔥 CRIA O BANCO E A TABELA PRIMEIRO 🔥
     init_db()
     
     print("=" * 60)
@@ -309,8 +295,12 @@ if __name__ == '__main__':
     print(f"📊 Produtos no banco: {contar_produtos()}")
     
     # 🔥 BUSCA PRODUTOS REAIS DA API 🔥
-    print("📥 Buscando produtos REAIS da Shopee...")
-    buscar_e_salvar_produtos()
+    if contar_produtos() == 0:
+        print("📥 Primeira execução - buscando produtos REAIS da Shopee...")
+        buscar_e_salvar_produtos()
+    else:
+        print("📥 Buscando MAIS produtos REAIS da Shopee...")
+        buscar_e_salvar_produtos()
     
     print(f"📊 TOTAL FINAL: {contar_produtos()} produtos REAIS")
     print("🚀 Acesse: http://localhost:5000")
