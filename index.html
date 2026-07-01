@@ -72,7 +72,7 @@
     </div>
 
     <div class="container">
-        <!-- PROMOÇÕES DO DIA -->
+        <!-- PROMOÇÕES DO DIA - PEGA PRODUTOS DO SITE -->
         <div class="promo-section" id="promoSection">
             <h2><i class="fas fa-bolt"></i> 🔥 Promoções do Dia</h2>
             <div class="promo-grid" id="promoGrid">
@@ -183,6 +183,7 @@
         }
 
         function loadPromocoes() {
+            // PROMOÇÕES PEGAM PRODUTOS DO SITE (DO BANCO)
             fetch('/api/promocoes')
                 .then(r => r.json())
                 .then(data => {
@@ -204,15 +205,6 @@
                     }).join('');
                 });
         }
-
-        // Atualiza contagem a cada 30 segundos
-        setInterval(() => {
-            fetch('/api/count')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('produtoCount').textContent = data.total;
-                });
-        }, 30000);
 
         window.onload = function() {
             loadProducts();
