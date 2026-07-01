@@ -43,7 +43,6 @@ def salvar_produto(produto):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # Verifica se o produto já existe pelo link
     cursor.execute("SELECT id FROM produtos WHERE link = ?", (produto['link'],))
     existe = cursor.fetchone()
     
@@ -92,7 +91,6 @@ def buscar_produtos(query):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # Busca por ID (exato) ou por nome (parcial)
     cursor.execute('''
         SELECT * FROM produtos 
         WHERE id_unico LIKE ? OR nome LIKE ? 
@@ -239,7 +237,6 @@ def api_search():
 @app.route('/api/promocoes')
 def api_promocoes():
     produtos = get_todos_produtos()
-    # Pega os últimos 20 produtos como "promoções do dia"
     promocoes = produtos[-20:] if len(produtos) > 20 else produtos
     return jsonify(promocoes)
 
@@ -247,22 +244,14 @@ def api_promocoes():
 def api_count():
     return jsonify({'total': contar_produtos()})
 
-@app.route('/api/update', methods=['POST'])
-def api_update():
-    novos = buscar_e_salvar_produtos()
-    return jsonify({
-        'novos': novos,
-        'total': contar_produtos()
-    })
-
 # ============================================================
-# SCHEDULER - RODA A CADA 2 DIAS
+# SCHEDULER - RODA A CADA 2 DIAS (AUTOMÁTICO)
 # ============================================================
 def scheduler():
     """Roda a cada 48 horas para buscar novos produtos"""
     while True:
         time.sleep(48 * 60 * 60)  # 48 horas
-        print("⏰ Executando atualização agendada...")
+        print("⏰ Atualização automática (2 dias)...")
         buscar_e_salvar_produtos()
 
 def iniciar_scheduler():
@@ -277,18 +266,25 @@ if __name__ == '__main__':
     init_db()
     
     print("=" * 60)
-    print("🛍️ SHOPEE AFILIADO - COM IDs E SALVAMENTO")
+    print("🛍️ SHOPEE AFILIADO - ATUALIZAÇÃO AUTOMÁTICA")
     print("=" * 60)
     print(f"📊 Produtos no banco: {contar_produtos()}")
     print("🚀 Acesse: http://localhost:5000")
     print("=" * 60)
     
-    # Busca produtos na primeira execução
+    # 🔥 BUSCA PRODUTOS AUTOMATICAMENTE AO INICIAR 🔥
     if contar_produtos() == 0:
-        print("📥 Primeira execução - buscando produtos...")
+        print("📥 Primeira execução - buscando produtos automaticamente...")
+        buscar_e_salvar_produtos()
+    else:
+        print("📥 Buscando novos produtos automaticamente...")
         buscar_e_salvar_produtos()
     
-    # Inicia o scheduler
+    # Inicia o scheduler (busca a cada 2 dias)
     iniciar_scheduler()
+    
+    print("=" * 60)
+    print(f"📊 TOTAL FINAL: {contar_produtos()} produtos")
+    print("=" * 60)
     
     app.run(host='0.0.0.0', port=5000)
